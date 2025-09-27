@@ -1,0 +1,61 @@
+{
+  "name": "teeny-tiny-router",
+  "version": "1.0.0",
+  "description": "A minimal, dependency-free client-side router with caching, script execution, and SSR compatibility",
+  "main": "dist/teeny-tiny-router.umd.js",
+  "module": "dist/teeny-tiny-router.es.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/teeny-tiny-router.es.js",
+      "require": "./dist/teeny-tiny-router.umd.js"
+    }
+  },
+  "files": [
+    "dist",
+    "src",
+    "README.md",
+    "LICENSE"
+  ],
+  "keywords": [
+    "router",
+    "spa",
+    "client-side",
+    "minimal",
+    "tiny",
+    "vanilla-js",
+    "no-dependencies",
+    "caching",
+    "ssr",
+    "javascript",
+    "es-modules"
+  ],
+  "author": "Igor Zhuravkov <zhuravkovigor@gmail.com>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/zhuravkovigor/teeny-tiny-router.git"
+  },
+  "homepage": "https://github.com/zhuravkovigor/teeny-tiny-router#readme",
+  "bugs": {
+    "url": "https://github.com/zhuravkovigor/teeny-tiny-router/issues"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "prepublishOnly": "npm run build"
+  },
+  "devDependencies": {
+    "vite": "^7.1.7"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "browserslist": [
+    "chrome >= 61",
+    "firefox >= 60",
+    "safari >= 10.1",
+    "edge >= 16"
+  ]
+}

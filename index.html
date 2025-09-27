@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>teeny-tiny-router</title>
+  </head>
+  <body>
+    <a href="/pages/about.html">Страница о нас</a>
+    <a href="/">Главная страница</a>
+    <a href="/pages/post/12/index.html">Страница поста</a>
+
+    <div id="app">
+      <h1>This is home page</h1>
+      <p>Welcome to the home page routed via Teeny Tiny Router.</p>
+    </div>
+    <script type="module">
+      import { MiniRouter, executeScripts } from "/src/index.js";
+      const router = new MiniRouter();
+
+      router.on("navigate", ({ title, body }) => {
+        if (title) document.title = title;
+        const app = document.querySelector("#app");
+        app.innerHTML = body;
+        // Execute scripts inside the injected content
+        executeScripts(app);
+      });
+
+      router.route("/", () => {
+        console.log("Home page");
+      });
+
+      router.route("/pages/about", () => {
+        console.log("About page");
+      });
+
+      router.route("/pages/post/:id", (params) => {
+        console.log("Post page, id:", params.id);
+      });
+
+      // Initial navigation to trigger route on page load
+      router.navigate(location.pathname, { replace: true });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,25 @@
+# Development files
+node_modules/
+src/
+public/
+.git/
+.gitignore
+
+# Demo files
+index.html
+about.html
+pages/
+post/
+
+# Build tools
+vite.config.js
+yarn.lock
+package-lock.json
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
