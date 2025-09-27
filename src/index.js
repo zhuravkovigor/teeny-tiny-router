@@ -29,12 +29,17 @@ async function executeScripts(root) {
 }
 
 export class MiniRouter {
-  constructor({ htmlExtension = true, interceptAllLinks = true } = {}) {
+  constructor({ 
+    htmlExtension = true, 
+    interceptAllLinks = true,
+    contentSelector = '#app'
+  } = {}) {
     this.cache = new Map();
     this.routes = new Map();
     this.events = {};
     this.htmlExtension = htmlExtension;
     this.interceptAllLinks = interceptAllLinks;
+    this.contentSelector = contentSelector;
 
     this._initLinkHandler();
     this._initPopStateHandler();
@@ -112,7 +117,7 @@ export class MiniRouter {
         credentials: "same-origin",
       });
       const text = await res.text();
-      const data = parseHTML(text);
+      const data = parseHTML(text, this.contentSelector);
       this.cache.set(url, data);
       return data;
     } catch (err) {

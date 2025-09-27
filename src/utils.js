@@ -53,15 +53,15 @@ export function parsePath(pattern, urlPath) {
   return params;
 }
 
-export function parseHTML(htmlString) {
+export function parseHTML(htmlString, contentSelector = "#app") {
   const parser = new DOMParser();
   const doc = parser.parseFromString(htmlString, "text/html");
 
   const title = doc.title || "";
-  // Prefer content from #app if present; fallback to body
-  const appEl = doc.querySelector("#app");
-  const body = appEl
-    ? appEl.innerHTML
+  // Prefer content from specified selector if present; fallback to body
+  const contentEl = doc.querySelector(contentSelector);
+  const body = contentEl
+    ? contentEl.innerHTML
     : doc.body
     ? doc.body.innerHTML
     : htmlString;

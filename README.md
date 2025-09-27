@@ -83,8 +83,15 @@ npm install teeny-tiny-router
 const router = new MiniRouter({
   htmlExtension: true, // Add .html to URLs
   interceptAllLinks: true, // Auto-intercept internal links
+  contentSelector: '#app', // CSS selector to extract content from fetched pages
 });
 ```
+
+#### Options
+
+- **`htmlExtension`** (boolean, default: `true`) - Automatically adds `.html` extension to URLs that don't have one
+- **`interceptAllLinks`** (boolean, default: `true`) - Automatically intercepts all internal links. Set to `false` to use opt-in mode with `data-link` attribute
+- **`contentSelector`** (string, default: `'#app'`) - CSS selector used to extract content from fetched HTML pages. If element not found, falls back to `<body>` content
 
 ### Methods
 
