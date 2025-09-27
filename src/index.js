@@ -29,10 +29,10 @@ async function executeScripts(root) {
 }
 
 export class MiniRouter {
-  constructor({ 
-    htmlExtension = true, 
+  constructor({
+    htmlExtension = true,
     interceptAllLinks = true,
-    contentSelector = '#app'
+    contentSelector = "#app",
   } = {}) {
     this.cache = new Map();
     this.routes = new Map();

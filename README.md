@@ -83,7 +83,7 @@ npm install teeny-tiny-router
 const router = new MiniRouter({
   htmlExtension: true, // Add .html to URLs
   interceptAllLinks: true, // Auto-intercept internal links
-  contentSelector: '#app', // CSS selector to extract content from fetched pages
+  contentSelector: "#app", // CSS selector to extract content from fetched pages
 });
 ```
 
