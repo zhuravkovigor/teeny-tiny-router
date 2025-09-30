@@ -407,15 +407,6 @@ const router = new MiniRouter({ interceptAllLinks: false });
 
 Requires ES2017+ support (async/await, modules).
 
-## Examples
-
-Check the `/examples` directory for:
-
-- Basic SPA setup
-- SSR integration examples
-- Advanced routing patterns
-- Custom content selectors
-
 ## Contributing
 
 1. Fork the repository
