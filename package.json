@@ -1,6 +1,6 @@
 {
   "name": "teeny-tiny-router",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "A minimal, dependency-free client-side router with caching, script execution, and SSR compatibility",
   "main": "dist/teeny-tiny-router.umd.js",
   "module": "dist/teeny-tiny-router.es.js",
