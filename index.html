@@ -16,7 +16,9 @@
     </div>
     <script type="module">
       import { MiniRouter, executeScripts } from "/src/index.js";
-      const router = new MiniRouter();
+      const router = new MiniRouter({
+        prefetchDelay: 1000,
+      });
 
       router.on("navigate", ({ title, body }) => {
         if (title) document.title = title;

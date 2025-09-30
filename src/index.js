@@ -33,6 +33,8 @@ export class MiniRouter {
     htmlExtension = true,
     interceptAllLinks = true,
     contentSelector = "#app",
+    prefetchOnHover = true,
+    prefetchDelay = 0,
   } = {}) {
     this.cache = new Map();
     this.routes = new Map();
@@ -40,9 +42,13 @@ export class MiniRouter {
     this.htmlExtension = htmlExtension;
     this.interceptAllLinks = interceptAllLinks;
     this.contentSelector = contentSelector;
+    this.prefetchOnHover = prefetchOnHover;
+    this.prefetchDelay = prefetchDelay;
+    this.prefetchTimeouts = new Map();
 
     this._initLinkHandler();
     this._initPopStateHandler();
+    this._initPrefetchHandler();
   }
 
   _normalizeUrl(url) {
@@ -94,6 +100,67 @@ export class MiniRouter {
     });
   }
 
+  _initPrefetchHandler() {
+    if (!this.prefetchOnHover) return;
+
+    document.addEventListener(
+      "mouseenter",
+      (e) => {
+        const link = e.target.closest("a[href], [data-link]");
+        if (!link) return;
+
+        const href = link.getAttribute("href");
+        if (!href) return;
+
+        // Same checks as in click handler
+        if (link.tagName === "A") {
+          const target = (link.getAttribute("target") || "").toLowerCase();
+          if (target === "_blank") return;
+          if (link.hasAttribute("download")) return;
+          const rel = (link.getAttribute("rel") || "").toLowerCase();
+          if (rel.includes("external")) return;
+          try {
+            const u = new URL(href, location.origin);
+            if (u.origin !== location.origin) return;
+          } catch {
+            return;
+          }
+        }
+
+        // Skip prefetch if disabled for this link
+        if (link.hasAttribute("data-no-prefetch")) return;
+
+        // Prefetch immediately or with delay
+        if (this.prefetchDelay === 0) {
+          this.prefetch(href);
+        } else {
+          const timeoutId = setTimeout(() => {
+            this.prefetch(href);
+          }, this.prefetchDelay);
+          this.prefetchTimeouts.set(link, timeoutId);
+        }
+      },
+      true
+    );
+
+    if (this.prefetchDelay > 0) {
+      document.addEventListener(
+        "mouseleave",
+        (e) => {
+          const link = e.target.closest("a[href], [data-link]");
+          if (!link) return;
+
+          const timeoutId = this.prefetchTimeouts.get(link);
+          if (timeoutId) {
+            clearTimeout(timeoutId);
+            this.prefetchTimeouts.delete(link);
+          }
+        },
+        true
+      );
+    }
+  }
+
   on(event, callback) {
     if (!this.events[event]) this.events[event] = [];
     this.events[event].push(callback);
@@ -109,24 +176,57 @@ export class MiniRouter {
     this.routes.set(pattern, callback);
   }
 
-  async fetchPage(url) {
+  async fetchPage(url, isPrefetch = false) {
     if (this.cache.has(url)) return this.cache.get(url);
     try {
+      const headers = { "X-Requested-With": "mini-router" };
+      if (isPrefetch) {
+        headers["Purpose"] = "prefetch";
+      }
+
       const res = await fetch(url, {
-        headers: { "X-Requested-With": "mini-router" },
+        headers,
         credentials: "same-origin",
       });
       const text = await res.text();
       const data = parseHTML(text, this.contentSelector);
       this.cache.set(url, data);
+
+      if (isPrefetch) {
+        this.emit("prefetch", { url, data });
+      }
+
       return data;
     } catch (err) {
+      // Don't cache errors for prefetch requests
+      if (isPrefetch) {
+        this.emit("prefetch:error", { url, error: err });
+        throw err;
+      }
+
       const fallback = {
         title: "Error",
         body: `<h1>Network Error</h1><pre>${String(err)}</pre>`,
       };
       this.cache.set(url, fallback);
       return fallback;
+    }
+  }
+
+  /**
+   * Prefetch a page in the background
+   * @param {string} url - URL to prefetch
+   * @returns {Promise<void>}
+   */
+  async prefetch(url) {
+    // Skip if already cached
+    if (this.cache.has(url)) return;
+
+    try {
+      await this.fetchPage(url, true);
+    } catch (err) {
+      // Silently fail prefetch requests
+      console.debug(`Prefetch failed for ${url}:`, err);
     }
   }
 
@@ -180,6 +280,54 @@ export class MiniRouter {
       history.replaceState({}, title, rawUrl);
     } else {
       history.pushState({}, title, rawUrl);
+    }
+  }
+
+  /**
+   * Prefetch multiple pages at once
+   * @param {string[]} urls - Array of URLs to prefetch
+   * @returns {Promise<void>}
+   */
+  async prefetchAll(urls) {
+    const promises = urls.map((url) => this.prefetch(url));
+    await Promise.allSettled(promises);
+  }
+
+  /**
+   * Clear the page cache
+   * @param {string} [url] - Specific URL to clear, or clear all if not provided
+   */
+  clearCache(url) {
+    if (url) {
+      this.cache.delete(url);
+    } else {
+      this.cache.clear();
+    }
+  }
+
+  /**
+   * Get cache statistics
+   * @returns {object} Cache info
+   */
+  getCacheInfo() {
+    return {
+      size: this.cache.size,
+      urls: Array.from(this.cache.keys()),
+    };
+  }
+
+  /**
+   * Enable or disable prefetch on hover
+   * @param {boolean} enabled
+   */
+  setPrefetchOnHover(enabled) {
+    this.prefetchOnHover = enabled;
+    if (!enabled) {
+      // Clear any pending prefetch timeouts
+      for (const timeoutId of this.prefetchTimeouts.values()) {
+        clearTimeout(timeoutId);
+      }
+      this.prefetchTimeouts.clear();
     }
   }
 }

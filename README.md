@@ -8,6 +8,7 @@ A minimal, dependency-free client-side router for modern web applications with b
 - **Automatic link interception** - Works with regular `<a>` tags
 - **Route parameters** - Support for `:id` params and `*` wildcards
 - **Page caching** - Automatic caching of fetched pages
+- **Intelligent prefetch** - Automatic prefetching on hover with configurable delay
 - **Script execution** - Runs scripts from dynamically loaded content
 - **SSR friendly** - Works seamlessly with server-side rendered pages
 - **Flexible rendering** - Custom or automatic content rendering
@@ -84,6 +85,8 @@ const router = new MiniRouter({
   htmlExtension: true, // Add .html to URLs
   interceptAllLinks: true, // Auto-intercept internal links
   contentSelector: "#app", // CSS selector to extract content from fetched pages
+  prefetchOnHover: true, // Enable automatic prefetch on hover
+  prefetchDelay: 0, // Delay in ms before prefetch starts
 });
 ```
 
@@ -92,6 +95,8 @@ const router = new MiniRouter({
 - **`htmlExtension`** (boolean, default: `true`) - Automatically adds `.html` extension to URLs that don't have one
 - **`interceptAllLinks`** (boolean, default: `true`) - Automatically intercepts all internal links. Set to `false` to use opt-in mode with `data-link` attribute
 - **`contentSelector`** (string, default: `'#app'`) - CSS selector used to extract content from fetched HTML pages. If element not found, falls back to `<body>` content
+- **`prefetchOnHover`** (boolean, default: `true`) - Automatically prefetch pages when hovering over links
+- **`prefetchDelay`** (number, default: `0`) - Delay in milliseconds before starting prefetch on hover. Set to 0 for instant prefetch, or a higher value (e.g., 100-300ms) to avoid prefetching during quick mouse movements
 
 ### Methods
 
@@ -151,6 +156,67 @@ router.on("navigate", ({ url, title, body }) => {
 router.on("route:/users/:id", ({ params, url, title, body }) => {
   console.log("User route matched:", params.id);
 });
+
+// Prefetch events
+router.on("prefetch", ({ url, data }) => {
+  console.log("Page prefetched:", url);
+});
+
+router.on("prefetch:error", ({ url, error }) => {
+  console.log("Prefetch failed:", url, error);
+});
+```
+
+#### `router.prefetch(url)`
+
+Manually prefetch a page in the background.
+
+```javascript
+// Prefetch a single page
+router.prefetch("/about");
+```
+
+#### `router.prefetchAll(urls)`
+
+Prefetch multiple pages at once.
+
+```javascript
+// Prefetch multiple pages
+router.prefetchAll(["/about", "/contact", "/services"]);
+```
+
+#### `router.clearCache(url?)`
+
+Clear the page cache.
+
+```javascript
+// Clear specific page from cache
+router.clearCache("/about");
+
+// Clear entire cache
+router.clearCache();
+```
+
+#### `router.getCacheInfo()`
+
+Get cache statistics.
+
+```javascript
+const info = router.getCacheInfo();
+console.log(`Cache size: ${info.size}`);
+console.log(`Cached URLs:`, info.urls);
+```
+
+#### `router.setPrefetchOnHover(enabled)`
+
+Enable or disable prefetch on hover.
+
+```javascript
+// Disable prefetch on hover
+router.setPrefetchOnHover(false);
+
+// Re-enable prefetch on hover
+router.setPrefetchOnHover(true);
 ```
 
 ### Route Parameters
@@ -185,6 +251,73 @@ router.route("/custom", () => {
     body: "<h1>Custom Body</h1>",
   };
 });
+```
+
+## Prefetch Features
+
+### Automatic Prefetch on Hover
+
+By default, the router automatically prefetches pages when users hover over links, significantly improving navigation speed. Prefetch happens instantly (no delay) to maximize the chance of having content ready before the user clicks.
+
+### Manual Prefetch
+
+You can manually prefetch pages to warm up the cache:
+
+```javascript
+// Prefetch important pages on app startup
+router.prefetchAll(["/about", "/contact", "/products"]);
+
+// Prefetch based on user behavior
+document.addEventListener("scroll", () => {
+  router.prefetch("/next-section");
+});
+```
+
+### Disable Prefetch for Specific Links
+
+Use the `data-no-prefetch` attribute to prevent automatic prefetching:
+
+```html
+<!-- This link won't be prefetched on hover -->
+<a href="/heavy-page" data-no-prefetch>Heavy Page</a>
+
+<!-- External links are automatically excluded -->
+<a href="https://external-site.com">External</a>
+
+<!-- Download links are automatically excluded -->
+<a href="/document.pdf" download>Download PDF</a>
+```
+
+### Prefetch Events
+
+Monitor prefetch activity with events:
+
+```javascript
+router.on("prefetch", ({ url, data }) => {
+  console.log(`✓ Prefetched: ${url}`);
+});
+
+router.on("prefetch:error", ({ url, error }) => {
+  console.log(`✗ Prefetch failed: ${url}`);
+});
+```
+
+### Cache Management
+
+Monitor and manage the page cache:
+
+```javascript
+// Check cache status
+const { size, urls } = router.getCacheInfo();
+console.log(`${size} pages cached: ${urls.join(", ")}`);
+
+// Clear cache when needed
+if (size > 50) {
+  router.clearCache(); // Clear all
+}
+
+// Or clear specific pages
+router.clearCache("/old-page");
 ```
 
 ## SSR Integration
